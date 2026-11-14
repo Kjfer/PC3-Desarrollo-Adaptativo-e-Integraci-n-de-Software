@@ -1,0 +1,51 @@
+# Fuentes del pipeline. Se copian a ctl.fuente_config al inicio de cada corrida.
+# Agregar un reporte nuevo = agregar una entrada aquí + su tabla raw en sql/03_raw_tablas.sql.
+
+archivos:
+  - cod_fuente: consultas_propuesta
+    descripcion: Consultas de la propuesta (preguntas y respuestas)
+    patron: '^consultas_propuesta_(?P<fecha>\d{8})\.csv$'
+    formato: csv
+    separador: ';'
+    encoding: utf-8
+    columnas_esperadas: [id_propuesta, nro_consulta, ronda, fecha_pregunta, pregunta,
+                         fecha_respuesta, respuesta, estado]
+    tabla_destino: raw.arch_consultas_propuesta
+    frecuencia: DIARIA
+
+  - cod_fuente: rating_cliente
+    descripcion: Rating del cliente en la propuesta
+    patron: '^rating_cliente_(?P<fecha>\d{8})\.xlsx$'
+    formato: xlsx
+    hoja: Rating
+    texto_encabezado: cod_cliente   # el encabezado se busca; las filas de título varían
+    columnas_esperadas: [cod_cliente, rating, modelo_rating, fecha_rating]
+    tabla_destino: raw.arch_rating_cliente
+    frecuencia: DIARIA
+
+  - cod_fuente: renovacion_lineas
+    descripcion: Renovación de líneas de las propuestas
+    patron: '^renovacion_lineas_(?P<fecha>\d{8})\.txt$'
+    formato: txt
+    separador: '|'
+    encoding: utf-8
+    columnas_esperadas: [id_propuesta, id_linea, tipo_linea, monto, plazo_meses,
+                         fecha_vencimiento, es_renovacion]
+    tabla_destino: raw.arch_renovacion_lineas
+    frecuencia: DIARIA
+
+# origen: clave de settings.yaml > bases
+# modo COMPLETA: se reemplaza la tabla raw en cada corrida (maestros y tablas sin marca de agua)
+# modo INCREMENTAL: solo filas con marca_agua > máximo ya cargado en raw
+bases:
+  - {cod_fuente: dwh.banca,               origen: dwh_sim, tabla_origen: dbo.banca,               tabla_destino: raw.dwh_banca,               modo_carga: COMPLETA}
+  - {cod_fuente: dwh.grupo_economico,     origen: dwh_sim, tabla_origen: dbo.grupo_economico,     tabla_destino: raw.dwh_grupo_economico,     modo_carga: COMPLETA}
+  - {cod_fuente: dwh.cliente,             origen: dwh_sim, tabla_origen: dbo.cliente,             tabla_destino: raw.dwh_cliente,             modo_carga: COMPLETA}
+  - {cod_fuente: dwh.propuesta,           origen: dwh_sim, tabla_origen: dbo.propuesta,           tabla_destino: raw.dwh_propuesta,           modo_carga: INCREMENTAL, columna_marca_agua: fecha_actualizacion}
+  - {cod_fuente: dwh.propuesta_linea,     origen: dwh_sim, tabla_origen: dbo.propuesta_linea,     tabla_destino: raw.dwh_propuesta_linea,     modo_carga: COMPLETA}
+  - {cod_fuente: dwh.garantia,            origen: dwh_sim, tabla_origen: dbo.garantia,            tabla_destino: raw.dwh_garantia,            modo_carga: COMPLETA}
+  - {cod_fuente: dwh.riesgo_cliente,      origen: dwh_sim, tabla_origen: dbo.riesgo_cliente,      tabla_destino: raw.dwh_riesgo_cliente,      modo_carga: INCREMENTAL, columna_marca_agua: fecha_corte}
+  - {cod_fuente: dwh.riesgo_grupo,        origen: dwh_sim, tabla_origen: dbo.riesgo_grupo,        tabla_destino: raw.dwh_riesgo_grupo,        modo_carga: INCREMENTAL, columna_marca_agua: fecha_corte}
+  - {cod_fuente: loc.analista,            origen: local,   tabla_origen: dbo.analista,            tabla_destino: raw.loc_analista,            modo_carga: COMPLETA}
+  - {cod_fuente: loc.asignacion_propuesta, origen: local,  tabla_origen: dbo.asignacion_propuesta, tabla_destino: raw.loc_asignacion_propuesta, modo_carga: INCREMENTAL, columna_marca_agua: id_asignacion}
+  - {cod_fuente: loc.seguimiento_propuesta, origen: local, tabla_origen: dbo.seguimiento_propuesta, tabla_destino: raw.loc_seguimiento_propuesta, modo_carga: INCREMENTAL, columna_marca_agua: id_seguimiento}

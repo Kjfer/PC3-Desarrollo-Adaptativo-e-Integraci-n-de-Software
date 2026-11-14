@@ -1,0 +1,28 @@
+# Configuración general del demo (sin credenciales: esas van en .env)
+
+bases:
+  dwh_sim: DWH_CORP_SIM      # simula el datawarehouse corporativo
+  local: BD_ARC_LOCAL        # simula la base local del área
+  integrado: ARC_INTEGRADO   # almacén integrado: raw, stg, dwh, ctl
+
+rutas:
+  ruta_compartida: data/ruta_compartida
+  sql: sql
+
+orquestacion:
+  reintentos: 2              # reintentos ante fallas pasajeras de SQL Server (conexión, deadlock, timeout)
+  espera_segundos: 5         # espera antes del reintento n: espera_segundos × n
+
+simulacion:
+  semilla: 42                # misma semilla = mismos datos
+  fecha_fin: 2026-11-12      # último día con archivos
+  dias: 30                   # días de archivos hasta fecha_fin (inclusive)
+  n_grupos: 25
+  n_clientes: 150
+  pct_clientes_con_grupo: 0.7
+  propuestas_por_dia: [4, 10]   # mínimo y máximo de propuestas nuevas por día
+  propuestas_previas: 25        # propuestas ingresadas en los 20 días previos al primer archivo
+  # Problemas sembrados a propósito
+  pct_fecha_iso_consultas: 0.25     # filas con fechas aaaa-mm-dd en vez de dd/mm/aaaa
+  pct_duplicados_consultas: 0.04    # filas repetidas en consultas
+  pct_dias_fila_extra_rating: 0.2   # días con una fila de título adicional en el Excel

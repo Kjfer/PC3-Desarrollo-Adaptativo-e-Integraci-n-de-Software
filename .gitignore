@@ -1,0 +1,8 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# Archivos sintéticos: se regeneran con src/generar_datos.py
+data/ruta_compartida/*
+!data/ruta_compartida/.gitkeep
